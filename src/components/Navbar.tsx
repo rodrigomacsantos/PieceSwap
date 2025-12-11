@@ -14,9 +14,9 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-display font-bold text-xl">B</span>
+              <span className="text-primary-foreground font-display font-bold text-xl">P</span>
             </div>
-            <span className="font-display font-bold text-xl text-foreground">BrickSwap</span>
+            <span className="font-display font-bold text-xl text-foreground">PieceSwap</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -39,9 +39,11 @@ const Navbar = () => {
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
               <User className="w-5 h-5" />
             </Button>
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-              Vender
-            </Button>
+            <Link to="/sell">
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                Vender
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -74,9 +76,11 @@ const Navbar = () => {
                 <User className="w-4 h-4 mr-2" />
                 Entrar
               </Button>
-              <Button className="flex-1 bg-primary text-primary-foreground">
-                Vender
-              </Button>
+              <Link to="/sell" className="flex-1">
+                <Button className="w-full bg-primary text-primary-foreground">
+                  Vender
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
