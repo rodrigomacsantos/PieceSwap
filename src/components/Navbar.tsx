@@ -36,9 +36,11 @@ const Navbar = () => {
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
               <Search className="w-5 h-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-              <User className="w-5 h-5" />
-            </Button>
+            <Link to="/profile">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                <User className="w-5 h-5" />
+              </Button>
+            </Link>
             <Link to="/sell">
               <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
                 Vender
@@ -72,10 +74,12 @@ const Navbar = () => {
               <span>Trocar</span>
             </Link>
             <div className="flex gap-2 pt-2">
-              <Button variant="outline" className="flex-1">
-                <User className="w-4 h-4 mr-2" />
-                Entrar
-              </Button>
+              <Link to="/profile" className="flex-1">
+                <Button variant="outline" className="w-full">
+                  <User className="w-4 h-4 mr-2" />
+                  Perfil
+                </Button>
+              </Link>
               <Link to="/sell" className="flex-1">
                 <Button className="w-full bg-primary text-primary-foreground">
                   Vender
