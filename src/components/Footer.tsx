@@ -10,9 +10,9 @@ const Footer = () => {
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-display font-bold text-xl">B</span>
+                <span className="text-primary-foreground font-display font-bold text-xl">P</span>
               </div>
-              <span className="font-display font-bold text-xl">BrickSwap</span>
+              <span className="font-display font-bold text-xl">PieceSwap</span>
             </Link>
             <p className="text-muted-foreground text-sm mb-6">
               A maior comunidade de compra, venda e troca de peças LEGO em Portugal.
@@ -65,7 +65,7 @@ const Footer = () => {
 
         <div className="border-t border-muted/20 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-muted-foreground text-sm">
-            © 2024 BrickSwap. Todos os direitos reservados.
+            © 2024 PieceSwap. Todos os direitos reservados.
           </p>
           <p className="text-muted-foreground text-sm">
             LEGO® é uma marca registada do LEGO Group. Este site não é afiliado ao LEGO Group.
