@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Filter, RefreshCw } from "lucide-react";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import SwipeCard, { SwipeActions } from "@/components/SwipeCard";
+import MatchModal from "@/components/MatchModal";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
 
 const swipeItems = [
   {
@@ -48,6 +49,8 @@ const Swap = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipedItems, setSwipedItems] = useState<string[]>([]);
   const [matches, setMatches] = useState<string[]>([]);
+  const [showMatchModal, setShowMatchModal] = useState(false);
+  const [matchedItem, setMatchedItem] = useState<typeof swipeItems[0] | null>(null);
 
   const handleSwipe = (direction: "left" | "right") => {
     const currentItem = swipeItems[currentIndex];
@@ -58,10 +61,8 @@ const Swap = () => {
         // Simulate 30% chance of match
         if (Math.random() > 0.7) {
           setMatches([...matches, currentItem.id]);
-          toast({
-            title: "🎉 É um Match!",
-            description: `Tu e ${currentItem.owner} querem trocar! Começa a conversa.`,
-          });
+          setMatchedItem(currentItem);
+          setShowMatchModal(true);
         }
       }
       
@@ -176,13 +177,22 @@ const Swap = () => {
                     </h3>
                     <p className="text-muted-foreground mb-6">
                       {matches.length > 0 
-                        ? `Fizeste ${matches.length} match${matches.length > 1 ? 'es' : ''}! Vai ver as tuas conversas.`
+                        ? `Fizeste ${matches.length} match${matches.length > 1 ? 'es' : ''}!`
                         : "Não há mais peças para ver de momento."}
                     </p>
-                    <Button onClick={resetCards} className="bg-primary text-primary-foreground">
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Recomeçar
-                    </Button>
+                    <div className="flex gap-3 justify-center">
+                      {matches.length > 0 && (
+                        <Link to="/chats">
+                          <Button variant="outline">
+                            Ver Conversas
+                          </Button>
+                        </Link>
+                      )}
+                      <Button onClick={resetCards} className="bg-primary text-primary-foreground">
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Recomeçar
+                      </Button>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -206,6 +216,12 @@ const Swap = () => {
             </motion.div>
           </motion.div>
         </div>
+
+        <MatchModal
+          isOpen={showMatchModal}
+          onClose={() => setShowMatchModal(false)}
+          matchedItem={matchedItem}
+        />
       </main>
     </div>
   );
