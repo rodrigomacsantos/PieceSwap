@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Search, SlidersHorizontal, Grid3X3, LayoutList } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -214,7 +215,9 @@ const Marketplace = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 * index }}
               >
-                <ProductCard {...product} />
+                <Link to={`/product/${product.id}`}>
+                  <ProductCard {...product} />
+                </Link>
               </motion.div>
             ))}
           </div>
