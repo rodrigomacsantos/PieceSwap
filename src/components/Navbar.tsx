@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, ShoppingBag, Repeat, User, Search, MessageCircle } from "lucide-react";
+import { Menu, X, ShoppingBag, Repeat, User, Search, MessageCircle, LogIn } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border">
@@ -36,24 +38,34 @@ const Navbar = () => {
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
               <Search className="w-5 h-5" />
             </Button>
-            <Link to="/chats">
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
-                <MessageCircle className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
-                  2
-                </span>
-              </Button>
-            </Link>
-            <Link to="/profile">
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                <User className="w-5 h-5" />
-              </Button>
-            </Link>
-            <Link to="/sell">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                Vender
-              </Button>
-            </Link>
+            {user && (
+              <Link to="/chats">
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
+                  <MessageCircle className="w-5 h-5" />
+                </Button>
+              </Link>
+            )}
+            {user ? (
+              <>
+                <Link to="/profile">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                    <User className="w-5 h-5" />
+                  </Button>
+                </Link>
+                <Link to="/sell">
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                    Vender
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <Link to="/auth">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Entrar
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -81,22 +93,35 @@ const Navbar = () => {
               <Repeat className="w-4 h-4" />
               <span>Trocar</span>
             </Link>
-            <Link to="/chats" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-              <MessageCircle className="w-4 h-4" />
-              <span>Mensagens</span>
-            </Link>
+            {user && (
+              <Link to="/chats" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                <MessageCircle className="w-4 h-4" />
+                <span>Mensagens</span>
+              </Link>
+            )}
             <div className="flex gap-2 pt-2">
-              <Link to="/profile" className="flex-1">
-                <Button variant="outline" className="w-full">
-                  <User className="w-4 h-4 mr-2" />
-                  Perfil
-                </Button>
-              </Link>
-              <Link to="/sell" className="flex-1">
-                <Button className="w-full bg-primary text-primary-foreground">
-                  Vender
-                </Button>
-              </Link>
+              {user ? (
+                <>
+                  <Link to="/profile" className="flex-1">
+                    <Button variant="outline" className="w-full">
+                      <User className="w-4 h-4 mr-2" />
+                      Perfil
+                    </Button>
+                  </Link>
+                  <Link to="/sell" className="flex-1">
+                    <Button className="w-full bg-primary text-primary-foreground">
+                      Vender
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <Link to="/auth" className="flex-1">
+                  <Button className="w-full bg-primary text-primary-foreground">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Entrar
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>
