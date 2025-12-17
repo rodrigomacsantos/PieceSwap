@@ -1,5 +1,5 @@
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { X, Heart, RotateCcw } from "lucide-react";
+import { X, Heart, RotateCcw, Star } from "lucide-react";
 import { useState } from "react";
 
 interface SwipeCardProps {
@@ -93,36 +93,55 @@ const SwipeCard = ({ name, image, owner, wantsToTrade, onSwipe, isTop }: SwipeCa
 interface SwipeActionsProps {
   onSwipe: (direction: "left" | "right") => void;
   onUndo: () => void;
+  onSuperlike?: () => void;
+  canSuperlike?: boolean;
+  isPremium?: boolean;
 }
 
-export const SwipeActions = ({ onSwipe, onUndo }: SwipeActionsProps) => {
+export const SwipeActions = ({ onSwipe, onUndo, onSuperlike, canSuperlike, isPremium }: SwipeActionsProps) => {
   return (
-    <div className="flex items-center justify-center gap-6 mt-6">
+    <div className="flex items-center justify-center gap-4 mt-6">
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => onSwipe("left")}
-        className="w-16 h-16 rounded-full bg-card card-shadow flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+        className="w-14 h-14 rounded-full bg-card card-shadow flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
       >
-        <X className="w-8 h-8" />
+        <X className="w-7 h-7" />
       </motion.button>
       
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={onUndo}
-        className="w-12 h-12 rounded-full bg-card card-shadow flex items-center justify-center text-lego-orange hover:bg-lego-orange hover:text-accent-foreground transition-colors"
+        className="w-10 h-10 rounded-full bg-card card-shadow flex items-center justify-center text-lego-orange hover:bg-lego-orange hover:text-accent-foreground transition-colors"
       >
-        <RotateCcw className="w-5 h-5" />
+        <RotateCcw className="w-4 h-4" />
+      </motion.button>
+
+      {/* Superlike Button (Premium only) */}
+      <motion.button
+        whileHover={{ scale: isPremium ? 1.1 : 1 }}
+        whileTap={{ scale: isPremium ? 0.9 : 1 }}
+        onClick={onSuperlike}
+        disabled={!isPremium}
+        className={`w-12 h-12 rounded-full card-shadow flex items-center justify-center transition-colors ${
+          isPremium && canSuperlike
+            ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+            : "bg-muted text-muted-foreground cursor-not-allowed"
+        }`}
+        title={!isPremium ? "Exclusivo Premium" : canSuperlike ? "Superlike" : "Sem superlikes disponíveis"}
+      >
+        <Star className={`w-5 h-5 ${isPremium && canSuperlike ? "fill-current" : ""}`} />
       </motion.button>
       
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => onSwipe("right")}
-        className="w-16 h-16 rounded-full bg-card card-shadow flex items-center justify-center text-lego-green hover:bg-lego-green hover:text-accent-foreground transition-colors"
+        className="w-14 h-14 rounded-full bg-card card-shadow flex items-center justify-center text-lego-green hover:bg-lego-green hover:text-accent-foreground transition-colors"
       >
-        <Heart className="w-8 h-8" />
+        <Heart className="w-7 h-7" />
       </motion.button>
     </div>
   );
