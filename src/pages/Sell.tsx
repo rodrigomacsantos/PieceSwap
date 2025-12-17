@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Upload, X, Camera, Info, Coins, Tag, Package, FileText } from "lucide-react";
+import { Upload, X, Camera, Info, Coins, Tag, Package, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +12,11 @@ import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
 const categories = [
   "Minifiguras",
@@ -33,8 +38,11 @@ const conditions = [
 
 const Sell = () => {
   const { toast } = useToast();
-  const [images, setImages] = useState<string[]>([]);
+  const { user } = useAuth();
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isSwapEnabled, setIsSwapEnabled] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -46,24 +54,116 @@ const Sell = () => {
     setNumber: "",
   });
 
+  const validateImage = (file: File): string | null => {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      return `Tipo de ficheiro inválido: ${file.name}. Apenas JPG, PNG e WebP são permitidos.`;
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      return `Ficheiro muito grande: ${file.name}. Máximo 5MB por imagem.`;
+    }
+    return null;
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files) {
-      const newImages = Array.from(files).map((file) => URL.createObjectURL(file));
-      setImages((prev) => [...prev, ...newImages].slice(0, 5));
+    if (!files) return;
+
+    const newFiles: File[] = [];
+    const newPreviews: string[] = [];
+
+    for (const file of Array.from(files)) {
+      const error = validateImage(file);
+      if (error) {
+        toast({ title: "Erro", description: error, variant: "destructive" });
+        continue;
+      }
+      if (imageFiles.length + newFiles.length >= 5) break;
+      
+      newFiles.push(file);
+      newPreviews.push(URL.createObjectURL(file));
     }
+
+    setImageFiles((prev) => [...prev, ...newFiles].slice(0, 5));
+    setImagePreviews((prev) => [...prev, ...newPreviews].slice(0, 5));
   };
 
   const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
+    URL.revokeObjectURL(imagePreviews[index]);
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const uploadImages = async (): Promise<string[]> => {
+    if (!user || imageFiles.length === 0) return [];
+
+    const uploadedUrls: string[] = [];
+
+    for (const file of imageFiles) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      const { data, error } = await supabase.storage
+        .from('listings_images')
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('listings_images')
+        .getPublicUrl(data.path);
+
+      uploadedUrls.push(publicUrl);
+    }
+
+    return uploadedUrls;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Anúncio criado com sucesso!",
-      description: "O teu anúncio está agora visível no marketplace.",
-    });
+    if (!user) return;
+
+    setIsSubmitting(true);
+    try {
+      // Upload images first
+      const imageUrls = await uploadImages();
+
+      // Create listing
+      const { error } = await supabase
+        .from('listings')
+        .insert({
+          user_id: user.id,
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          condition: formData.condition,
+          price_eur: formData.price ? parseFloat(formData.price) : null,
+          price_swap_coins: formData.swapCoins ? parseInt(formData.swapCoins) : null,
+          quantity: parseInt(formData.quantity) || 1,
+          set_number: formData.setNumber || null,
+          accepts_trades: isSwapEnabled,
+          images: imageUrls,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Anúncio criado com sucesso!",
+        description: "O teu anúncio está agora visível no marketplace.",
+      });
+
+      // Reset form
+      setFormData({ title: "", description: "", category: "", condition: "", price: "", swapCoins: "", quantity: "1", setNumber: "" });
+      setImageFiles([]);
+      setImagePreviews([]);
+    } catch (error) {
+      toast({
+        title: "Erro ao criar anúncio",
+        description: "Por favor, tenta novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (field: string, value: string) => {
@@ -105,7 +205,7 @@ const Sell = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                    {images.map((img, index) => (
+                    {imagePreviews.map((img, index) => (
                       <div key={index} className="relative aspect-square rounded-xl overflow-hidden border-2 border-border bg-muted">
                         <img src={img} alt={`Upload ${index + 1}`} className="w-full h-full object-cover" />
                         <button
@@ -122,13 +222,13 @@ const Sell = () => {
                         )}
                       </div>
                     ))}
-                    {images.length < 5 && (
+                    {imagePreviews.length < 5 && (
                       <label className="aspect-square rounded-xl border-2 border-dashed border-border hover:border-primary bg-muted/50 hover:bg-muted flex flex-col items-center justify-center cursor-pointer transition-colors">
                         <Upload className="w-8 h-8 text-muted-foreground mb-2" />
                         <span className="text-xs text-muted-foreground">Adicionar</span>
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/jpeg,image/png,image/webp"
                           multiple
                           onChange={handleImageUpload}
                           className="hidden"
@@ -324,11 +424,18 @@ const Sell = () => {
 
               {/* Submit Button */}
               <div className="flex flex-col sm:flex-row gap-4 justify-end">
-                <Button type="button" variant="outline" className="h-12 px-8">
+                <Button type="button" variant="outline" className="h-12 px-8" disabled={isSubmitting}>
                   Guardar Rascunho
                 </Button>
-                <Button type="submit" className="h-12 px-8 bg-primary text-primary-foreground hover:bg-primary/90">
-                  Publicar Anúncio
+                <Button type="submit" className="h-12 px-8 bg-primary text-primary-foreground hover:bg-primary/90" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      A publicar...
+                    </>
+                  ) : (
+                    "Publicar Anúncio"
+                  )}
                 </Button>
               </div>
             </form>
