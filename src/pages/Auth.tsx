@@ -181,7 +181,7 @@ const Auth = () => {
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
                         id="fullName"
-                        placeholder="João Silva"
+                        placeholder="O teu nome"
                         value={formData.fullName}
                         onChange={(e) => handleChange("fullName", e.target.value)}
                         className="pl-10"
@@ -198,7 +198,7 @@ const Auth = () => {
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
                       <Input
                         id="username"
-                        placeholder="joaosilva"
+                        placeholder="o_teu_username"
                         value={formData.username}
                         onChange={(e) => handleChange("username", e.target.value)}
                         className="pl-10"
