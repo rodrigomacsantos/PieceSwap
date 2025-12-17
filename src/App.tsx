@@ -13,6 +13,10 @@ import Profile from "./pages/Profile";
 import ProductDetail from "./pages/ProductDetail";
 import Chats from "./pages/Chats";
 import Auth from "./pages/Auth";
+import Premium from "./pages/Premium";
+import Checkout from "./pages/Checkout";
+import CheckoutSuccess from "./pages/CheckoutSuccess";
+import Partnerships from "./pages/Partnerships";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +38,10 @@ const App = () => (
             <Route path="/profile/:id" element={<Profile />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/chats" element={<ProtectedRoute><Chats /></ProtectedRoute>} />
+            <Route path="/premium" element={<Premium />} />
+            <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+            <Route path="/checkout/success" element={<ProtectedRoute><CheckoutSuccess /></ProtectedRoute>} />
+            <Route path="/partnerships" element={<Partnerships />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

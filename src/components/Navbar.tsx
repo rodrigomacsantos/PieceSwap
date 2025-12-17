@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, ShoppingBag, Repeat, User, Search, MessageCircle, LogIn } from "lucide-react";
+import { Menu, X, ShoppingBag, Repeat, User, Search, MessageCircle, LogIn, Crown } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { isPremium } = useSubscription();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border">
@@ -30,6 +32,18 @@ const Navbar = () => {
             <Link to="/swap" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
               <Repeat className="w-4 h-4" />
               <span>Trocar</span>
+            </Link>
+            <Link to="/premium" className={cn(
+              "flex items-center gap-2 transition-colors",
+              isPremium ? "text-secondary-foreground" : "text-muted-foreground hover:text-foreground"
+            )}>
+              <Crown className={cn("w-4 h-4", isPremium && "text-secondary-foreground")} />
+              <span>Premium</span>
+              {isPremium && (
+                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-secondary text-secondary-foreground rounded">
+                  ATIVO
+                </span>
+              )}
             </Link>
           </div>
 
@@ -81,7 +95,7 @@ const Navbar = () => {
         <div
           className={cn(
             "md:hidden overflow-hidden transition-all duration-300",
-            isOpen ? "max-h-64 pb-4" : "max-h-0"
+            isOpen ? "max-h-80 pb-4" : "max-h-0"
           )}
         >
           <div className="flex flex-col gap-4 pt-4">
@@ -92,6 +106,18 @@ const Navbar = () => {
             <Link to="/swap" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
               <Repeat className="w-4 h-4" />
               <span>Trocar</span>
+            </Link>
+            <Link to="/premium" className={cn(
+              "flex items-center gap-2 transition-colors",
+              isPremium ? "text-secondary-foreground" : "text-muted-foreground hover:text-foreground"
+            )}>
+              <Crown className="w-4 h-4" />
+              <span>Premium</span>
+              {isPremium && (
+                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-secondary text-secondary-foreground rounded ml-2">
+                  ATIVO
+                </span>
+              )}
             </Link>
             {user && (
               <Link to="/chats" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">

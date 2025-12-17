@@ -79,6 +79,54 @@ export type Database = {
           },
         ]
       }
+      daily_superlikes: {
+        Row: {
+          created_at: string
+          id: string
+          superlike_date: string
+          used_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          superlike_date?: string
+          used_count?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          superlike_date?: string
+          used_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_swipes: {
+        Row: {
+          created_at: string
+          id: string
+          swipe_count: number
+          swipe_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          swipe_count?: number
+          swipe_date?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          swipe_count?: number
+          swipe_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
           accepts_trades: boolean | null
@@ -88,8 +136,10 @@ export type Database = {
           description: string | null
           id: string
           images: string[] | null
+          is_highlighted: boolean | null
           price_eur: number | null
           price_swap_coins: number | null
+          priority_boost: number | null
           quantity: number | null
           set_number: string | null
           status: string | null
@@ -105,8 +155,10 @@ export type Database = {
           description?: string | null
           id?: string
           images?: string[] | null
+          is_highlighted?: boolean | null
           price_eur?: number | null
           price_swap_coins?: number | null
+          priority_boost?: number | null
           quantity?: number | null
           set_number?: string | null
           status?: string | null
@@ -122,8 +174,10 @@ export type Database = {
           description?: string | null
           id?: string
           images?: string[] | null
+          is_highlighted?: boolean | null
           price_eur?: number | null
           price_swap_coins?: number | null
+          priority_boost?: number | null
           quantity?: number | null
           set_number?: string | null
           status?: string | null
@@ -213,6 +267,39 @@ export type Database = {
           },
         ]
       }
+      partnerships: {
+        Row: {
+          contact_email: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          contact_email: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          status?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          contact_email?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -254,6 +341,115 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      sales_commissions: {
+        Row: {
+          buyer_id: string
+          commission_amount: number
+          commission_rate: number
+          created_at: string
+          id: string
+          listing_id: string
+          sale_price_eur: number
+          seller_id: string
+          status: string
+        }
+        Insert: {
+          buyer_id: string
+          commission_amount: number
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          listing_id: string
+          sale_price_eur: number
+          seller_id: string
+          status?: string
+        }
+        Update: {
+          buyer_id?: string
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          listing_id?: string
+          sale_price_eur?: number
+          seller_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_commissions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          plan: string
+          price_eur: number | null
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          plan?: string
+          price_eur?: number | null
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          plan?: string
+          price_eur?: number | null
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      superlikes: {
+        Row: {
+          id: string
+          listing_id: string
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          listing_id: string
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          listing_id?: string
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "superlikes_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       swipe_actions: {
         Row: {
