@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { z } from 'zod';
+
+const messageSchema = z.object({
+  content: z.string().trim().min(1, "Message cannot be empty").max(5000, "Message must be less than 5000 characters"),
+});
 
 export interface ConversationParticipant {
   user_id: string;
@@ -163,12 +168,20 @@ export const useMessages = () => {
     if (!user) return null;
 
     try {
+      // Validate message content
+      const validationResult = messageSchema.safeParse({ content });
+      if (!validationResult.success) {
+        throw new Error(validationResult.error.errors[0]?.message || 'Invalid message');
+      }
+
+      const validatedContent = validationResult.data.content;
+
       const { data, error } = await supabase
         .from('messages')
         .insert({
           conversation_id: conversationId,
           sender_id: user.id,
-          content,
+          content: validatedContent,
         })
         .select()
         .single();
@@ -176,7 +189,8 @@ export const useMessages = () => {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Error sending message:', error);
+      // Log generic error without exposing details
+      console.error('Failed to send message');
       return null;
     }
   };
