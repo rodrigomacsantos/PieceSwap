@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
@@ -33,15 +33,20 @@ export const useListings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const fetchListings = async () => {
+  const fetchListings = async (includeOwn: boolean = false) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('listings')
         .select('*')
-        .eq('status', 'active')
         .order('created_at', { ascending: false });
 
+      // Only filter by active status if not including own listings
+      if (!includeOwn) {
+        query = query.eq('status', 'active');
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       
       // Fetch seller profiles separately
@@ -68,7 +73,7 @@ export const useListings = () => {
     }
   };
 
-  const fetchUserListings = async (userId: string) => {
+  const fetchUserListings = useCallback(async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('listings')
@@ -82,7 +87,7 @@ export const useListings = () => {
       console.error('Error fetching user listings:', error);
       return [];
     }
-  };
+  }, []);
 
   const fetchListing = async (id: string) => {
     try {
