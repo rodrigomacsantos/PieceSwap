@@ -6,6 +6,7 @@ import { useToast } from './use-toast';
 interface GeolocationState {
   latitude: number | null;
   longitude: number | null;
+  cityName: string | null;
   error: string | null;
   loading: boolean;
 }
@@ -23,6 +24,7 @@ export const useGeolocation = () => {
   const [state, setState] = useState<GeolocationState>({
     latitude: null,
     longitude: null,
+    cityName: null,
     error: null,
     loading: false,
   });
@@ -30,6 +32,20 @@ export const useGeolocation = () => {
   const [loadingNearby, setLoadingNearby] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const fetchCityName = async (lat: number, lon: number): Promise<string | null> => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`,
+        { headers: { 'Accept-Language': 'pt' } }
+      );
+      const data = await response.json();
+      return data.address?.city || data.address?.town || data.address?.municipality || data.address?.village || null;
+    } catch (error) {
+      console.error('Error fetching city name:', error);
+      return null;
+    }
+  };
 
   const requestLocation = useCallback(async () => {
     if (!navigator.geolocation) {
@@ -42,7 +58,11 @@ export const useGeolocation = () => {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        setState({ latitude, longitude, error: null, loading: false });
+        
+        // Fetch city name
+        const cityName = await fetchCityName(latitude, longitude);
+        
+        setState({ latitude, longitude, cityName, error: null, loading: false });
 
         // Save to profile if user is logged in
         if (user) {
@@ -74,7 +94,7 @@ export const useGeolocation = () => {
             errorMessage = 'Tempo limite excedido';
             break;
         }
-        setState(prev => ({ ...prev, error: errorMessage, loading: false }));
+        setState(prev => ({ ...prev, error: errorMessage, loading: false, cityName: null }));
         toast({
           title: "Erro de localização",
           description: errorMessage,
