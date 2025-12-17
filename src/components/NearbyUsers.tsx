@@ -12,6 +12,7 @@ export const NearbyUsers = () => {
   const { 
     latitude, 
     longitude, 
+    cityName,
     loading, 
     error, 
     nearbyUsers, 
@@ -77,6 +78,7 @@ export const NearbyUsers = () => {
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5 text-primary" />
               Utilizadores Próximos
+              {cityName && <span className="text-muted-foreground font-normal">(em {cityName})</span>}
             </CardTitle>
             <CardDescription>
               {nearbyUsers.length} utilizador{nearbyUsers.length !== 1 ? 'es' : ''} num raio de {radius}km
