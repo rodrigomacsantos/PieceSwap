@@ -307,7 +307,9 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          latitude: number | null
           location: string | null
+          longitude: number | null
           rating: number | null
           swap_coins: number
           total_ratings: number | null
@@ -320,7 +322,9 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id: string
+          latitude?: number | null
           location?: string | null
+          longitude?: number | null
           rating?: number | null
           swap_coins?: number
           total_ratings?: number | null
@@ -333,7 +337,9 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          latitude?: number | null
           location?: string | null
+          longitude?: number | null
           rating?: number | null
           swap_coins?: number
           total_ratings?: number | null
@@ -488,7 +494,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_distance: {
+        Args: { lat1: number; lat2: number; lon1: number; lon2: number }
+        Returns: number
+      }
+      get_nearby_users: {
+        Args: {
+          max_results?: number
+          radius_km?: number
+          user_lat: number
+          user_lon: number
+        }
+        Returns: {
+          avatar_url: string
+          distance_km: number
+          full_name: string
+          id: string
+          location: string
+          username: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

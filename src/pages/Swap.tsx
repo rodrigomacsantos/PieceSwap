@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import SwipeCard, { SwipeActions } from "@/components/SwipeCard";
 import MatchModal from "@/components/MatchModal";
+import { NearbyUsers } from "@/components/NearbyUsers";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -356,6 +357,17 @@ const Swap = () => {
           onClose={() => setShowMatchModal(false)}
           matchedItem={matchedItem}
         />
+
+        {/* Nearby Users Section */}
+        <div className="container mx-auto px-4 mt-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <NearbyUsers />
+          </motion.div>
+        </div>
       </main>
     </div>
   );
