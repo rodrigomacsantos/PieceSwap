@@ -10,6 +10,8 @@ export interface Profile {
   avatar_url: string | null;
   bio: string | null;
   location: string | null;
+  latitude: number | null;
+  longitude: number | null;
   swap_coins: number;
   rating: number | null;
   total_ratings: number | null;
