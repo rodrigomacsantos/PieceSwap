@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Filter, RefreshCw, Crown, Lock, Star } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -9,55 +9,34 @@ import { NearbyUsers } from "@/components/NearbyUsers";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useListings } from "@/hooks/useListings";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-
-const swipeItems = [
-  {
-    id: "1",
-    name: "LEGO Architecture Taj Mahal",
-    image: "https://m.media-amazon.com/images/I/81Qe4pMiKZL._AC_SL1500_.jpg",
-    owner: "Carlos P.",
-    wantsToTrade: ["Star Wars", "Technic", "Creator Expert"],
-  },
-  {
-    id: "2",
-    name: "Minifiguras Marvel - Coleção Completa",
-    image: "https://m.media-amazon.com/images/I/81jHF+CLWPL._AC_SL1500_.jpg",
-    owner: "Sofia M.",
-    wantsToTrade: ["DC Comics", "Harry Potter", "Ninjago"],
-  },
-  {
-    id: "3",
-    name: "LEGO Ideas NASA Apollo Saturn V",
-    image: "https://m.media-amazon.com/images/I/71Y1NwpjdXL._AC_SL1500_.jpg",
-    owner: "Miguel A.",
-    wantsToTrade: ["Space", "City", "Technic"],
-  },
-  {
-    id: "4",
-    name: "LEGO Technic Porsche 911 GT3 RS",
-    image: "https://m.media-amazon.com/images/I/81Yf7FdFSaL._AC_SL1500_.jpg",
-    owner: "João M.",
-    wantsToTrade: ["Technic", "Speed Champions", "Creator"],
-  },
-  {
-    id: "5",
-    name: "LEGO Star Wars Millennium Falcon",
-    image: "https://m.media-amazon.com/images/I/91enAbsgB7L._AC_SL1500_.jpg",
-    owner: "Ana L.",
-    wantsToTrade: ["Star Wars", "Architecture", "Ideas"],
-  },
-];
 
 const FREE_SWIPE_LIMIT = 20;
 
+// Categories for "wants to trade" - based on related categories
+const relatedCategories: Record<string, string[]> = {
+  "Technic": ["Speed Champions", "Creator Expert", "Architecture"],
+  "Star Wars": ["Marvel", "DC Comics", "Ideas"],
+  "City": ["Creator", "Friends", "Ninjago"],
+  "Creator Expert": ["Architecture", "Technic", "Ideas"],
+  "Marvel": ["DC Comics", "Star Wars", "Ninjago"],
+  "Harry Potter": ["Ideas", "Creator Expert", "Architecture"],
+  "Ninjago": ["City", "Marvel", "Star Wars"],
+  "Architecture": ["Creator Expert", "Ideas", "Technic"],
+  "Minifiguras": ["Star Wars", "Marvel", "Harry Potter"],
+};
+
 const Swap = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { listings, loading: listingsLoading, fetchListings } = useListings();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipedItems, setSwipedItems] = useState<string[]>([]);
   const [matches, setMatches] = useState<string[]>([]);
   const [showMatchModal, setShowMatchModal] = useState(false);
-  const [matchedItem, setMatchedItem] = useState<typeof swipeItems[0] | null>(null);
+  const [matchedItem, setMatchedItem] = useState<any>(null);
   
   const { 
     isPremium, 
@@ -69,6 +48,23 @@ const Swap = () => {
     useSuperlike,
     loading 
   } = useSubscription();
+
+  useEffect(() => {
+    fetchListings();
+  }, []);
+
+  // Transform listings to swipe items, excluding user's own listings
+  const swipeItems = useMemo(() => {
+    return listings
+      .filter(listing => listing.user_id !== user?.id && listing.status === 'active')
+      .map(listing => ({
+        id: listing.id,
+        name: listing.title,
+        image: listing.images?.[0] || "/placeholder.svg",
+        owner: listing.seller?.full_name || listing.seller?.username || "Vendedor",
+        wantsToTrade: relatedCategories[listing.category] || ["Technic", "Star Wars", "City"],
+      }));
+  }, [listings, user?.id]);
 
   const handleSwipe = async (direction: "left" | "right") => {
     if (!canSwipe) {
@@ -239,7 +235,7 @@ const Swap = () => {
               <div className="text-sm text-muted-foreground">Matches</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-display font-bold text-foreground">{swipeItems.length - currentIndex}</div>
+              <div className="text-2xl font-display font-bold text-foreground">{Math.max(0, swipeItems.length - currentIndex)}</div>
               <div className="text-sm text-muted-foreground">Restantes</div>
             </div>
             {isPremium && (
@@ -266,90 +262,124 @@ const Swap = () => {
             </Button>
           </motion.div>
 
-          {/* Swipe Area */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-col items-center"
-          >
-            <div className="relative w-full max-w-[360px] h-[520px]">
-              <AnimatePresence>
-                {visibleCards.map((item, index) => (
-                  <SwipeCard
-                    key={item.id}
-                    {...item}
-                    onSwipe={handleSwipe}
-                    isTop={index === 0}
-                  />
-                ))}
-              </AnimatePresence>
-              
-              {currentIndex >= swipeItems.length && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="absolute inset-0 flex items-center justify-center bg-card rounded-3xl card-shadow"
-                >
-                  <div className="text-center p-8">
-                    <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
-                      <RefreshCw className="w-10 h-10 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-xl font-display font-bold text-foreground mb-2">
-                      Viste tudo!
-                    </h3>
-                    <p className="text-muted-foreground mb-6">
-                      {matches.length > 0 
-                        ? `Fizeste ${matches.length} match${matches.length > 1 ? 'es' : ''}!`
-                        : "Não há mais peças para ver de momento."}
-                    </p>
-                    <div className="flex gap-3 justify-center">
-                      {matches.length > 0 && (
-                        <Link to="/chats">
-                          <Button variant="outline">
-                            Ver Conversas
-                          </Button>
-                        </Link>
-                      )}
-                      <Button onClick={resetCards} className="bg-primary text-primary-foreground">
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Recomeçar
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
+          {/* Loading State */}
+          {listingsLoading && (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+              <p className="text-muted-foreground">A carregar anúncios...</p>
             </div>
-            
-            {currentIndex < swipeItems.length && (
-              <SwipeActions 
-                onSwipe={handleSwipe} 
-                onUndo={handleUndo}
-                onSuperlike={handleSuperlike}
-                canSuperlike={canSuperlike}
-                isPremium={isPremium}
-              />
-            )}
+          )}
 
-            {/* Instructions */}
+          {/* No Listings State */}
+          {!listingsLoading && swipeItems.length === 0 && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="mt-8 text-center"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center justify-center py-16"
             >
-              <p className="text-sm text-muted-foreground">
-                Arrasta o card para a <span className="text-lego-green font-medium">direita</span> para mostrar interesse
-                ou para a <span className="text-primary font-medium">esquerda</span> para passar
+              <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                <Sparkles className="w-10 h-10 text-muted-foreground" />
+              </div>
+              <h3 className="text-xl font-display font-bold text-foreground mb-2">
+                Ainda não há anúncios
+              </h3>
+              <p className="text-muted-foreground mb-6 text-center max-w-md">
+                Sê o primeiro a criar um anúncio e começa a trocar LEGO com outros colecionadores!
               </p>
-              {isPremium && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  <Star className="w-3 h-3 inline-block mr-1 text-secondary-foreground" />
-                  Usa o Superlike para aumentar as tuas chances de match!
-                </p>
-              )}
+              <Link to="/sell">
+                <Button className="bg-primary text-primary-foreground">
+                  Criar Anúncio
+                </Button>
+              </Link>
             </motion.div>
-          </motion.div>
+          )}
+
+          {/* Swipe Area */}
+          {!listingsLoading && swipeItems.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-col items-center"
+            >
+              <div className="relative w-full max-w-[360px] h-[520px]">
+                <AnimatePresence>
+                  {visibleCards.map((item, index) => (
+                    <SwipeCard
+                      key={item.id}
+                      {...item}
+                      onSwipe={handleSwipe}
+                      isTop={index === 0}
+                    />
+                  ))}
+                </AnimatePresence>
+                
+                {currentIndex >= swipeItems.length && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="absolute inset-0 flex items-center justify-center bg-card rounded-3xl card-shadow"
+                  >
+                    <div className="text-center p-8">
+                      <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                        <RefreshCw className="w-10 h-10 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-xl font-display font-bold text-foreground mb-2">
+                        Viste tudo!
+                      </h3>
+                      <p className="text-muted-foreground mb-6">
+                        {matches.length > 0 
+                          ? `Fizeste ${matches.length} match${matches.length > 1 ? 'es' : ''}!`
+                          : "Não há mais peças para ver de momento."}
+                      </p>
+                      <div className="flex gap-3 justify-center">
+                        {matches.length > 0 && (
+                          <Link to="/chats">
+                            <Button variant="outline">
+                              Ver Conversas
+                            </Button>
+                          </Link>
+                        )}
+                        <Button onClick={resetCards} className="bg-primary text-primary-foreground">
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Recomeçar
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+              
+              {currentIndex < swipeItems.length && (
+                <SwipeActions 
+                  onSwipe={handleSwipe} 
+                  onUndo={handleUndo}
+                  onSuperlike={handleSuperlike}
+                  canSuperlike={canSuperlike}
+                  isPremium={isPremium}
+                />
+              )}
+
+              {/* Instructions */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="mt-8 text-center"
+              >
+                <p className="text-sm text-muted-foreground">
+                  Arrasta o card para a <span className="text-lego-green font-medium">direita</span> para mostrar interesse
+                  ou para a <span className="text-primary font-medium">esquerda</span> para passar
+                </p>
+                {isPremium && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    <Star className="w-3 h-3 inline-block mr-1 text-secondary-foreground" />
+                    Usa o Superlike para aumentar as tuas chances de match!
+                  </p>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
         </div>
 
         <MatchModal
