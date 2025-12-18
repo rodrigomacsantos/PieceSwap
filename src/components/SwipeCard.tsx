@@ -10,9 +10,10 @@ interface SwipeCardProps {
   wantsToTrade: string[];
   onSwipe: (direction: "left" | "right") => void;
   isTop: boolean;
+  zIndex: number;
 }
 
-const SwipeCard = ({ name, image, owner, wantsToTrade, onSwipe, isTop }: SwipeCardProps) => {
+const SwipeCard = ({ name, image, owner, wantsToTrade, onSwipe, isTop, zIndex }: SwipeCardProps) => {
   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
   
   const x = useMotionValue(0);
@@ -40,7 +41,7 @@ const SwipeCard = ({ name, image, owner, wantsToTrade, onSwipe, isTop }: SwipeCa
 
   return (
     <motion.div
-      style={{ x, rotate, opacity }}
+      style={{ x, rotate, opacity, zIndex }}
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.7}

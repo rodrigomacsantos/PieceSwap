@@ -310,6 +310,7 @@ const Swap = () => {
                       {...item}
                       onSwipe={handleSwipe}
                       isTop={index === 0}
+                      zIndex={visibleCards.length - index}
                     />
                   ))}
                 </AnimatePresence>
