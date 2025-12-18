@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, ShoppingBag, Repeat, User, Search, MessageCircle, LogIn, Crown } from "lucide-react";
+import { Menu, X, ShoppingBag, Repeat, User, Search, MessageCircle, LogIn, Crown, Wallet } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,7 +8,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, signOut, swapcoins } = useAuth();
   const { isPremium } = useSubscription();
 
   return (
@@ -61,6 +61,12 @@ const Navbar = () => {
             )}
             {user ? (
               <>
+                <Link to="/wallet">
+                  <Button variant="ghost" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                    <Wallet className="w-5 h-5" />
+                    <span className="font-bold text-sm">{swapcoins}</span>
+                  </Button>
+                </Link>
                 <Link to="/profile">
                   <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
                     <User className="w-5 h-5" />
@@ -120,10 +126,16 @@ const Navbar = () => {
               )}
             </Link>
             {user && (
-              <Link to="/chats" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-                <MessageCircle className="w-4 h-4" />
-                <span>Mensagens</span>
-              </Link>
+              <>
+                <Link to="/wallet" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                  <Wallet className="w-4 h-4" />
+                  <span>Carteira</span>
+                </Link>
+                <Link to="/chats" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Mensagens</span>
+                </Link>
+              </>
             )}
             <div className="flex gap-2 pt-2">
               {user ? (

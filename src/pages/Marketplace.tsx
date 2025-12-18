@@ -158,7 +158,7 @@ const Marketplace = () => {
                     <ProductCard
                       id={listing.id}
                       name={listing.title}
-                      price={listing.price_eur || 0}
+                      price={listing.price_swap_coins || 0}
                       image={listing.images?.[0] || "/placeholder.svg"}
                       seller={listing.seller?.username || listing.seller?.full_name || "Vendedor"}
                       condition={listing.condition as "novo" | "usado" | "como novo"}
