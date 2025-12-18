@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Coins, Package, History, Settings, Star, MapPin, Calendar, Edit2, Plus, Camera, Save, X, Loader2 } from "lucide-react";
+import { User, Package, History, Settings, Star, MapPin, Calendar, Edit2, Plus, Camera, Save, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +12,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useListings } from "@/hooks/useListings";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,8 +25,7 @@ const conditionColors: Record<string, string> = {
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-  const { profile, loading: profileLoading, updateProfile } = useProfile();
+  const { user, profile, loading: profileLoading, updateProfile, signOut } = useAuth();
   const { fetchUserListings } = useListings();
   const [listings, setListings] = useState<any[]>([]);
   const [listingsLoading, setListingsLoading] = useState(true);
@@ -78,13 +76,14 @@ const Profile = () => {
   };
 
   const handleSaveProfile = async () => {
+    if (!updateProfile) return;
     await updateProfile(editForm);
     setIsEditing(false);
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
+    if (!file || !user || !updateProfile) return;
 
     setUploading(true);
     try {
@@ -282,12 +281,7 @@ const Profile = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-8 border-t border-border">
-              <div className="text-center p-4 bg-muted/50 rounded-xl">
-                <Coins className="w-6 h-6 text-lego-yellow mx-auto mb-2" />
-                <p className="text-2xl font-display font-bold text-foreground">{profile?.swap_coins || 0}</p>
-                <p className="text-xs text-muted-foreground">SwapCoins</p>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8 pt-8 border-t border-border">
               <div className="text-center p-4 bg-muted/50 rounded-xl">
                 <Package className="w-6 h-6 text-primary mx-auto mb-2" />
                 <p className="text-2xl font-display font-bold text-foreground">{activeListings.length}</p>
@@ -439,22 +433,6 @@ const Profile = () => {
                         </div>
                       </div>
                       <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>Editar</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Coins className="w-5 h-5 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">SwapCoins</p>
-                          <p className="text-sm text-muted-foreground">{profile?.swap_coins || 0} SwapCoins disponíveis</p>
-                        </div>
-                      </div>
-                      <Link to="/premium">
-                        <Button variant="ghost" size="sm">Obter mais</Button>
-                      </Link>
                     </div>
                   </CardContent>
                 </Card>
