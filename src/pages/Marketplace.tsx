@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Search, SlidersHorizontal, Grid3X3, LayoutList } from "lucide-react";
@@ -8,6 +8,7 @@ import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useListings } from "@/hooks/useListings";
 
 const categories = [
   "Todos",
@@ -22,89 +23,19 @@ const categories = [
   "Minifiguras",
 ];
 
-const products = [
-  {
-    id: "1",
-    name: "LEGO Technic Bugatti Chiron 42083 - Peças Avulsas",
-    price: 15.99,
-    image: "https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=400&h=400&fit=crop",
-    seller: "João M.",
-    condition: "como novo" as const,
-    category: "Technic",
-  },
-  {
-    id: "2",
-    name: "Minifiguras Star Wars - Lote de 5 Personagens",
-    price: 24.50,
-    image: "https://images.unsplash.com/photo-1518946222227-364f22132616?w=400&h=400&fit=crop",
-    seller: "Maria S.",
-    condition: "usado" as const,
-    category: "Star Wars",
-  },
-  {
-    id: "3",
-    name: "LEGO City - Estação de Polícia Completa",
-    price: 45.00,
-    image: "https://images.unsplash.com/photo-1560961911-ba7ef651a56c?w=400&h=400&fit=crop",
-    seller: "Pedro R.",
-    condition: "novo" as const,
-    category: "City",
-  },
-  {
-    id: "4",
-    name: "Peças Raras LEGO Creator Expert - Modular",
-    price: 32.00,
-    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop",
-    seller: "Ana L.",
-    condition: "como novo" as const,
-    category: "Creator Expert",
-  },
-  {
-    id: "5",
-    name: "LEGO Architecture - Estátua da Liberdade",
-    price: 89.00,
-    image: "https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=400&h=600&fit=crop",
-    seller: "Carlos P.",
-    condition: "novo" as const,
-    category: "Architecture",
-  },
-  {
-    id: "6",
-    name: "Minifiguras Marvel - Vingadores",
-    price: 38.00,
-    image: "https://images.unsplash.com/photo-1608889825205-eebdb9fc5806?w=400&h=400&fit=crop",
-    seller: "Sofia M.",
-    condition: "usado" as const,
-    category: "Marvel",
-  },
-  {
-    id: "7",
-    name: "LEGO Harry Potter - Castelo de Hogwarts",
-    price: 120.00,
-    image: "https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=400&h=400&fit=crop",
-    seller: "Miguel A.",
-    condition: "como novo" as const,
-    category: "Harry Potter",
-  },
-  {
-    id: "8",
-    name: "LEGO Ninjago - Dragão Dourado",
-    price: 28.00,
-    image: "https://images.unsplash.com/photo-1566140967404-b8b3932483f5?w=400&h=400&fit=crop",
-    seller: "Rita C.",
-    condition: "usado" as const,
-    category: "Ninjago",
-  },
-];
-
 const Marketplace = () => {
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
+  const { listings, loading, fetchListings } = useListings();
 
-  const filteredProducts = products.filter((product) => {
-    const matchesCategory = selectedCategory === "Todos" || product.category === selectedCategory;
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+  useEffect(() => {
+    fetchListings();
+  }, []);
+
+  const filteredProducts = listings.filter((listing) => {
+    const matchesCategory = selectedCategory === "Todos" || listing.category === selectedCategory;
+    const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -201,28 +132,45 @@ const Marketplace = () => {
             {filteredProducts.length} resultados encontrados
           </motion.p>
 
-          {/* Products Grid */}
-          <div className={cn(
-            "grid gap-6",
-            viewMode === "grid" 
-              ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-              : "grid-cols-1"
-          )}>
-            {filteredProducts.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * index }}
-              >
-                <Link to={`/product/${product.id}`}>
-                  <ProductCard {...product} />
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+          {/* Loading State */}
+          {loading && (
+            <div className="text-center py-16">
+              <p className="text-muted-foreground">A carregar anúncios...</p>
+            </div>
+          )}
 
-          {filteredProducts.length === 0 && (
+          {/* Products Grid */}
+          {!loading && (
+            <div className={cn(
+              "grid gap-6",
+              viewMode === "grid" 
+                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                : "grid-cols-1"
+            )}>
+              {filteredProducts.map((listing, index) => (
+                <motion.div
+                  key={listing.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * Math.min(index, 10) }}
+                >
+                  <Link to={`/product/${listing.id}`}>
+                    <ProductCard
+                      id={listing.id}
+                      name={listing.title}
+                      price={listing.price_eur || 0}
+                      image={listing.images?.[0] || "/placeholder.svg"}
+                      seller={listing.seller?.username || listing.seller?.full_name || "Vendedor"}
+                      condition={listing.condition as "novo" | "usado" | "como novo"}
+                      category={listing.category}
+                    />
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {!loading && filteredProducts.length === 0 && (
             <div className="text-center py-16">
               <p className="text-muted-foreground">Nenhum produto encontrado</p>
             </div>
