@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, ShoppingBag, Repeat, User, Search, MessageCircle, LogIn, Crown } from "lucide-react";
+import { Menu, X, ShoppingBag, Repeat, User, Search, MessageCircle, LogIn, Crown, Coins } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,7 +8,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const { isPremium } = useSubscription();
 
   return (
@@ -52,6 +52,12 @@ const Navbar = () => {
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
               <Search className="w-5 h-5" />
             </Button>
+            {user && profile && (
+                <div className="flex items-center gap-2 text-muted-foreground pr-2">
+                    <Coins className="w-5 h-5 text-lego-yellow" />
+                    <span className="font-bold text-sm">{profile.swap_coins}</span>
+                </div>
+            )}
             {user && (
               <Link to="/chats">
                 <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
