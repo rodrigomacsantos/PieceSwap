@@ -1,79 +1,37 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from './use-toast';
-
-export interface Profile {
-  id: string;
-  username: string | null;
-  full_name: string | null;
-  avatar_url: string | null;
-  bio: string | null;
-  location: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  swap_coins: number;
-  rating: number | null;
-  total_ratings: number | null;
-  created_at: string;
-  updated_at: string;
-}
 
 interface AuthContextType {
   user: User | null;
-  profile: Profile | null;
   session: Session | null;
   loading: boolean;
   signUp: (email: string, password: string, metadata?: { username?: string; full_name?: string }) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
-  updateProfile: (updates: Partial<Profile>) => Promise<Profile | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchProfile = async (user: User | null) => {
-        if (!user) {
-            setProfile(null);
-            return;
-        }
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-            if (error) throw error;
-            setProfile(data);
-        } catch (error) {
-            console.error('Error fetching profile:', error);
-            setProfile(null);
-        }
-    };
-
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
-        const currentUser = session?.user ?? null
-        setUser(currentUser);
-        await fetchProfile(currentUser);
+        setUser(session?.user ?? null);
         setLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      await fetchProfile(currentUser);
+      setUser(session?.user ?? null);
       setLoading(false);
     });
 
@@ -106,39 +64,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
   };
 
-  const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) return null;
-
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setProfile(data);
-      toast({
-        title: "Perfil atualizado!",
-        description: "As alterações foram guardadas.",
-      });
-
-      return data;
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar o perfil.",
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
-
   return (
-    <AuthContext.Provider value={{ user, profile, session, loading, signUp, signIn, signOut, updateProfile }}>
+    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
