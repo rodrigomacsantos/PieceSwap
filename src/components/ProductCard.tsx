@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Heart, MessageCircle } from "lucide-react";
+import { Heart, MessageCircle, Coins } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
@@ -52,9 +52,12 @@ const ProductCard = ({ name, price, image, seller, condition, category }: Produc
         <p className="text-xs text-muted-foreground mb-2">{category}</p>
         
         <div className="flex items-center justify-between">
-          <span className="text-lg font-display font-bold text-primary">
-            €{price.toFixed(2)}
-          </span>
+          <div className="flex items-center gap-2">
+            <Coins className="w-5 h-5 text-primary" />
+            <span className="text-lg font-display font-bold text-primary">
+              {price}
+            </span>
+          </div>
           <div className="flex items-center gap-1 text-muted-foreground">
             <MessageCircle className="w-4 h-4" />
             <span className="text-xs">{seller}</span>
