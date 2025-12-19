@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { User, Coins, Package, History, Settings, Star, MapPin, Calendar, Edit2, Plus, Camera, Save, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,14 +25,10 @@ const conditionColors: Record<string, string> = {
 };
 
 const Profile = () => {
-  const { id } = useParams();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { profile: loggedInUserProfile, loading: authProfileLoading, updateProfile } = useProfile();
+  const { profile, loading: profileLoading, updateProfile } = useProfile();
   const { fetchUserListings } = useListings();
-
-  const [viewedProfile, setViewedProfile] = useState<any>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
   const [listings, setListings] = useState<any[]>([]);
   const [listingsLoading, setListingsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("listings");
@@ -45,64 +41,37 @@ const Profile = () => {
     location: "",
   });
 
-  const profileId = id || user?.id;
-  const isOwnProfile = !id || (user && user.id === id);
-
+  // Redirect if not authenticated
   useEffect(() => {
-    const fetchProfileData = async () => {
-      if (!profileId) {
-        if (!authProfileLoading && !user) navigate("/auth");
-        return;
-      }
-
-      setProfileLoading(true);
-
-      if (isOwnProfile && loggedInUserProfile) {
-        setViewedProfile(loggedInUserProfile);
-      } else {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', profileId)
-          .single();
-
-        if (error || !data) {
-          console.error("Error fetching profile:", error);
-          navigate("/404");
-          return;
-        }
-        setViewedProfile(data);
-      }
-      setProfileLoading(false);
-    };
-
-    fetchProfileData();
-  }, [profileId, loggedInUserProfile, isOwnProfile, navigate, authProfileLoading, user]);
+    if (!user && !profileLoading) {
+      navigate("/auth");
+    }
+  }, [user, profileLoading, navigate]);
 
   // Fetch user's listings
   useEffect(() => {
     const loadListings = async () => {
-      if (profileId) {
+      if (user) {
         setListingsLoading(true);
-        const userListings = await fetchUserListings(profileId);
+        const userListings = await fetchUserListings(user.id);
         setListings(userListings);
         setListingsLoading(false);
       }
     };
     loadListings();
-  }, [profileId, fetchUserListings]);
+  }, [user, fetchUserListings]);
 
   // Initialize edit form when profile loads
   useEffect(() => {
-    if (viewedProfile && isOwnProfile) {
+    if (profile) {
       setEditForm({
-        full_name: viewedProfile.full_name || "",
-        username: viewedProfile.username || "",
-        bio: viewedProfile.bio || "",
-        location: viewedProfile.location || "",
+        full_name: profile.full_name || "",
+        username: profile.username || "",
+        bio: profile.bio || "",
+        location: profile.location || "",
       });
     }
-  }, [viewedProfile, isOwnProfile]);
+  }, [profile]);
 
   const handleEditChange = (field: string, value: string) => {
     setEditForm((prev) => ({ ...prev, [field]: value }));
@@ -156,7 +125,7 @@ const Profile = () => {
     return date.toLocaleDateString('pt-PT', { month: 'short', year: 'numeric' });
   };
 
-  if (profileLoading || authProfileLoading) {
+  if (profileLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -164,10 +133,10 @@ const Profile = () => {
     );
   }
 
-  if (!viewedProfile) return null;
+  if (!user) return null;
 
-  const displayName = viewedProfile?.full_name || viewedProfile?.username || "Utilizador";
-  const displayUsername = viewedProfile?.username ? `@${viewedProfile.username}` : '';
+  const displayName = profile?.full_name || profile?.username || user.email?.split('@')[0] || "Utilizador";
+  const displayUsername = profile?.username ? `@${profile.username}` : user.email;
 
   return (
     <div className="min-h-screen bg-background">
@@ -185,33 +154,30 @@ const Profile = () => {
               {/* Avatar with upload */}
               <div className="flex-shrink-0 relative">
                 <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-primary">
-                  <AvatarImage src={viewedProfile?.avatar_url || ''} alt={displayName} />
+                  <AvatarImage src={profile?.avatar_url || ''} alt={displayName} />
                   <AvatarFallback className="text-2xl font-display bg-primary text-primary-foreground">
                     {displayName.split(" ").map(n => n[0]).join("").toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                {isOwnProfile && (
-                  <label className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      className="hidden"
-                      disabled={uploading}
-                    />
-                    {uploading ? (
-                      <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
-                    ) : (
-                      <Camera className="w-4 h-4 text-primary-foreground" />
-                    )}
-                  </label>
-                )}
+                <label className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                    disabled={uploading}
+                  />
+                  {uploading ? (
+                    <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
+                  ) : (
+                    <Camera className="w-4 h-4 text-primary-foreground" />
+                  )}
+                </label>
               </div>
 
               {/* User Info */}
               <div className="flex-1">
-                {isOwnProfile && isEditing ? (
-                  // Edit Form
+                {isEditing ? (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
@@ -264,61 +230,49 @@ const Profile = () => {
                     </div>
                   </div>
                 ) : (
-                  // Display Info
                   <>
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
                       <div>
                         <h1 className="text-2xl md:text-3xl font-display font-bold mb-1">{displayName}</h1>
                         <p className="text-muted-foreground">{displayUsername}</p>
                       </div>
-                      {isOwnProfile ? (
-                        <Button variant="outline" className="self-start" onClick={() => setIsEditing(true)}>
-                          <Edit2 className="w-4 h-4 mr-2" />
-                          Editar Perfil
-                        </Button>
-                      ) : (
-                        <Button className="self-start">
-                          <User className="w-4 h-4 mr-2" />
-                          Seguir
-                        </Button>
-                      )}
+                      <Button variant="outline" className="self-start" onClick={() => setIsEditing(true)}>
+                        <Edit2 className="w-4 h-4 mr-2" />
+                        Editar Perfil
+                      </Button>
                     </div>
 
-                    {viewedProfile?.bio ? (
-                      <p className="text-foreground mb-4">{viewedProfile.bio}</p>
+                    {profile?.bio ? (
+                      <p className="text-foreground mb-4">{profile.bio}</p>
                     ) : (
-                      isOwnProfile && (
-                        <p className="text-muted-foreground italic mb-4">
-                          Ainda não tens biografia.
-                          <button onClick={() => setIsEditing(true)} className="text-primary hover:underline ml-1">
-                            Adiciona uma agora!
-                          </button>
-                        </p>
-                      )
+                      <p className="text-muted-foreground italic mb-4">
+                        Ainda não tens biografia. 
+                        <button onClick={() => setIsEditing(true)} className="text-primary hover:underline ml-1">
+                          Adiciona uma agora!
+                        </button>
+                      </p>
                     )}
 
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                      {viewedProfile?.location ? (
+                      {profile?.location ? (
                         <div className="flex items-center gap-1">
                           <MapPin className="w-4 h-4" />
-                          {viewedProfile.location}
+                          {profile.location}
                         </div>
                       ) : (
-                        isOwnProfile && (
-                          <button onClick={() => setIsEditing(true)} className="flex items-center gap-1 text-primary hover:underline">
-                            <MapPin className="w-4 h-4" />
-                            Adicionar localização
-                          </button>
-                        )
+                        <button onClick={() => setIsEditing(true)} className="flex items-center gap-1 text-primary hover:underline">
+                          <MapPin className="w-4 h-4" />
+                          Adicionar localização
+                        </button>
                       )}
                       <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
-                        Membro desde {viewedProfile?.created_at ? formatDate(viewedProfile.created_at) : 'hoje'}
+                        Membro desde {profile?.created_at ? formatDate(profile.created_at) : 'hoje'}
                       </div>
-                      {viewedProfile?.rating && viewedProfile.rating > 0 && (
+                      {profile?.rating && profile.rating > 0 && (
                         <div className="flex items-center gap-1">
                           <Star className="w-4 h-4 text-lego-yellow fill-lego-yellow" />
-                          {viewedProfile.rating} ({viewedProfile.total_ratings || 0} avaliações)
+                          {profile.rating} ({profile.total_ratings || 0} avaliações)
                         </div>
                       )}
                     </div>
@@ -341,7 +295,7 @@ const Profile = () => {
               </div>
               <div className="text-center p-4 bg-muted/50 rounded-xl">
                 <Star className="w-6 h-6 text-lego-yellow mx-auto mb-2" />
-                <p className="text-2xl font-display font-bold text-foreground">{viewedProfile?.rating || '-'}</p>
+                <p className="text-2xl font-display font-bold text-foreground">{profile?.rating || '-'}</p>
                 <p className="text-xs text-muted-foreground">Avaliação</p>
               </div>
             </div>
@@ -352,34 +306,28 @@ const Profile = () => {
             <TabsList className="grid grid-cols-3 mb-8 h-auto p-1 bg-muted">
               <TabsTrigger value="listings" className="py-3 data-[state=active]:bg-card">
                 <Package className="w-4 h-4 mr-2" />
-                Anúncios
+                Meus Anúncios
               </TabsTrigger>
               <TabsTrigger value="history" className="py-3 data-[state=active]:bg-card">
                 <History className="w-4 h-4 mr-2" />
                 Histórico
               </TabsTrigger>
-              {isOwnProfile && (
-                <TabsTrigger value="settings" className="py-3 data-[state=active]:bg-card">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Definições
-                </TabsTrigger>
-              )}
+              <TabsTrigger value="settings" className="py-3 data-[state=active]:bg-card">
+                <Settings className="w-4 h-4 mr-2" />
+                Definições
+              </TabsTrigger>
             </TabsList>
 
-            {/* Listings */}
+            {/* My Listings */}
             <TabsContent value="listings">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-display font-bold">
-                  {isOwnProfile ? "Meus Anúncios" : `Anúncios de ${displayName}`}
-                </h2>
-                {isOwnProfile && (
-                  <Link to="/sell">
-                    <Button className="bg-primary text-primary-foreground">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Novo Anúncio
-                    </Button>
-                  </Link>
-                )}
+                <h2 className="text-xl font-display font-bold">Meus Anúncios</h2>
+                <Link to="/sell">
+                  <Button className="bg-primary text-primary-foreground">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Novo Anúncio
+                  </Button>
+                </Link>
               </div>
 
               {listingsLoading ? (
@@ -390,20 +338,16 @@ const Profile = () => {
                 <Card className="border-dashed">
                   <CardContent className="py-12 text-center">
                     <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">
-                      {isOwnProfile ? "Ainda não tens anúncios" : "Este utilizador não tem anúncios"}
-                    </h3>
+                    <h3 className="text-lg font-medium mb-2">Ainda não tens anúncios</h3>
                     <p className="text-muted-foreground mb-4">
-                      {isOwnProfile ? "Começa a vender ou trocar as tuas peças LEGO!" : "Explora outros anúncios no marketplace."}
+                      Começa a vender ou trocar as tuas peças LEGO!
                     </p>
-                    {isOwnProfile && (
-                      <Link to="/sell">
-                        <Button>
-                          <Plus className="w-4 h-4 mr-2" />
-                          Criar Primeiro Anúncio
-                        </Button>
-                      </Link>
-                    )}
+                    <Link to="/sell">
+                      <Button>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Criar Primeiro Anúncio
+                      </Button>
+                    </Link>
                   </CardContent>
                 </Card>
               ) : (
@@ -462,54 +406,52 @@ const Profile = () => {
             </TabsContent>
 
             {/* Settings */}
-            {isOwnProfile && (
-              <TabsContent value="settings">
-                <h2 className="text-xl font-display font-bold mb-6">Definições da Conta</h2>
-                <div className="space-y-4 max-w-2xl">
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <User className="w-5 h-5 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">Informações Pessoais</p>
-                            <p className="text-sm text-muted-foreground">Nome, email, biografia</p>
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>Editar</Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <MapPin className="w-5 h-5 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">Localização</p>
-                            <p className="text-sm text-muted-foreground">{viewedProfile?.location || 'Não definida'}</p>
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>Editar</Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-destructive/50">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
+            <TabsContent value="settings">
+              <h2 className="text-xl font-display font-bold mb-6">Definições da Conta</h2>
+              <div className="space-y-4 max-w-2xl">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <User className="w-5 h-5 text-muted-foreground" />
                         <div>
-                          <p className="font-medium text-destructive">Terminar Sessão</p>
-                          <p className="text-sm text-muted-foreground">Sair da tua conta</p>
+                          <p className="font-medium">Informações Pessoais</p>
+                          <p className="text-sm text-muted-foreground">Nome, email, biografia</p>
                         </div>
-                        <Button variant="destructive" size="sm" onClick={handleSignOut}>
-                          Sair
-                        </Button>
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-            )}
+                      <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>Editar</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <MapPin className="w-5 h-5 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium">Localização</p>
+                          <p className="text-sm text-muted-foreground">{profile?.location || 'Não definida'}</p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>Editar</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-destructive/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-destructive">Terminar Sessão</p>
+                        <p className="text-sm text-muted-foreground">Sair da tua conta</p>
+                      </div>
+                      <Button variant="destructive" size="sm" onClick={handleSignOut}>
+                        Sair
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
           </Tabs>
         </div>
       </main>

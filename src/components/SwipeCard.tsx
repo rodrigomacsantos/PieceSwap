@@ -40,7 +40,6 @@ const SwipeCard = ({ name, image, owner, wantsToTrade, onSwipe, isTop }: SwipeCa
 
   return (
     <motion.div
-      data-testid="swipe-card"
       style={{ x, rotate, opacity }}
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
