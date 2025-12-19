@@ -282,12 +282,7 @@ const Profile = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-8 border-t border-border">
-              <div className="text-center p-4 bg-muted/50 rounded-xl">
-                <Coins className="w-6 h-6 text-lego-yellow mx-auto mb-2" />
-                <p className="text-2xl font-display font-bold text-foreground">{profile?.swap_coins || 0}</p>
-                <p className="text-xs text-muted-foreground">SwapCoins</p>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8 pt-8 border-t border-border">
               <div className="text-center p-4 bg-muted/50 rounded-xl">
                 <Package className="w-6 h-6 text-primary mx-auto mb-2" />
                 <p className="text-2xl font-display font-bold text-foreground">{activeListings.length}</p>
@@ -439,22 +434,6 @@ const Profile = () => {
                         </div>
                       </div>
                       <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>Editar</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Coins className="w-5 h-5 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">SwapCoins</p>
-                          <p className="text-sm text-muted-foreground">{profile?.swap_coins || 0} SwapCoins disponíveis</p>
-                        </div>
-                      </div>
-                      <Link to="/premium">
-                        <Button variant="ghost" size="sm">Obter mais</Button>
-                      </Link>
                     </div>
                   </CardContent>
                 </Card>
