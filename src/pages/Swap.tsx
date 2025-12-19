@@ -12,6 +12,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useListings } from "@/hooks/useListings";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const FREE_SWIPE_LIMIT = 20;
 
@@ -72,7 +73,7 @@ const Swap = () => {
         description: "Faz upgrade para Premium para swipes ilimitados.",
         action: {
           label: "Ver Premium",
-          onClick: () => navigate('/premium'),
+          onClick: () => navigate("/premium"),
         },
       });
       return;
@@ -80,20 +81,26 @@ const Swap = () => {
 
     const currentItem = swipeItems[currentIndex];
     if (currentItem) {
-      // Record the swipe
       await recordSwipe();
-      
       setSwipedItems([...swipedItems, currentItem.id]);
-      
+
       if (direction === "right") {
-        // Simulate 30% chance of match
-        if (Math.random() > 0.7) {
+        const { data, error } = await supabase.rpc("handle_swipe", {
+          listing_id_swiped_on: currentItem.id,
+          swipe_direction: "right",
+        });
+
+        if (error) {
+          toast.error("Ocorreu um erro ao processar o teu swipe.", {
+            description: error.message,
+          });
+        } else if (data.match) {
           setMatches([...matches, currentItem.id]);
           setMatchedItem(currentItem);
           setShowMatchModal(true);
         }
       }
-      
+
       setCurrentIndex((prev) => Math.min(prev + 1, swipeItems.length));
     }
   };
@@ -103,7 +110,7 @@ const Swap = () => {
       toast.error("Superlikes são exclusivos do Premium!", {
         action: {
           label: "Ver Premium",
-          onClick: () => navigate('/premium'),
+          onClick: () => navigate("/premium"),
         },
       });
       return;
@@ -120,17 +127,27 @@ const Swap = () => {
     if (currentItem) {
       const success = await useSuperlike(currentItem.id);
       if (success) {
-        toast.success("Superlike enviado!", {
-          description: "As tuas chances de match aumentaram 3x!",
+        const { data, error } = await supabase.rpc("handle_swipe", {
+          listing_id_swiped_on: currentItem.id,
+          swipe_direction: "right",
         });
-        
-        // Superlike has higher match chance (70%)
-        if (Math.random() > 0.3) {
-          setMatches([...matches, currentItem.id]);
-          setMatchedItem(currentItem);
-          setShowMatchModal(true);
+
+        if (error) {
+          toast.error("Ocorreu um erro ao processar o teu superlike.", {
+            description: error.message,
+          });
+        } else {
+          toast.success("Superlike enviado!", {
+            description: "As tuas chances de match aumentaram 3x!",
+          });
+
+          if (data.match) {
+            setMatches([...matches, currentItem.id]);
+            setMatchedItem(currentItem);
+            setShowMatchModal(true);
+          }
         }
-        
+
         setSwipedItems([...swipedItems, currentItem.id]);
         setCurrentIndex((prev) => Math.min(prev + 1, swipeItems.length));
       }
