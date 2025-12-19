@@ -280,44 +280,46 @@ const ProductDetail = () => {
               <Separator />
 
               {/* Seller Info */}
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4 mb-4">
-                    <Avatar className="w-14 h-14">
-                      <AvatarImage src={product.seller?.avatar_url || undefined} />
-                      <AvatarFallback>{sellerName.charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <h3 className="font-medium">{sellerName}</h3>
-                      {sellerUsername && (
-                        <p className="text-sm text-muted-foreground">{sellerUsername}</p>
+              <Link to={`/profile/${product.seller?.id}`}>
+                <Card className="hover:bg-muted/50 transition-colors">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4 mb-4">
+                      <Avatar className="w-14 h-14">
+                        <AvatarImage src={product.seller?.avatar_url || undefined} />
+                        <AvatarFallback>{sellerName.charAt(0).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <h3 className="font-medium">{sellerName}</h3>
+                        {sellerUsername && (
+                          <p className="text-sm text-muted-foreground">{sellerUsername}</p>
+                        )}
+                      </div>
+                      {product.seller?.rating && (
+                        <div className="text-right">
+                          <div className="flex items-center gap-1 text-lego-yellow">
+                            <Star className="w-4 h-4 fill-lego-yellow" />
+                            <span className="font-medium">{product.seller.rating}</span>
+                          </div>
+                        </div>
                       )}
                     </div>
-                    {product.seller?.rating && (
-                      <div className="text-right">
-                        <div className="flex items-center gap-1 text-lego-yellow">
-                          <Star className="w-4 h-4 fill-lego-yellow" />
-                          <span className="font-medium">{product.seller.rating}</span>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      {product.seller?.location && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <MapPin className="w-4 h-4" />
+                          {product.seller.location}
                         </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    {product.seller?.location && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <MapPin className="w-4 h-4" />
-                        {product.seller.location}
-                      </div>
-                    )}
-                    {product.seller?.created_at && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <User className="w-4 h-4" />
-                        Membro desde {format(new Date(product.seller.created_at), "MMM yyyy", { locale: pt })}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                      )}
+                      {product.seller?.created_at && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <User className="w-4 h-4" />
+                          Membro desde {format(new Date(product.seller.created_at), "MMM yyyy", { locale: pt })}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
 
               {/* Description */}
               {product.description && (
