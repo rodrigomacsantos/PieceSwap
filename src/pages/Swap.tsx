@@ -28,6 +28,14 @@ const relatedCategories: Record<string, string[]> = {
   "Minifiguras": ["Star Wars", "Marvel", "Harry Potter"],
 };
 
+interface SwipeItem {
+  id: string;
+  name: string;
+  image: string;
+  owner: string;
+  wantsToTrade: string[];
+}
+
 const Swap = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -36,7 +44,7 @@ const Swap = () => {
   const [swipedItems, setSwipedItems] = useState<string[]>([]);
   const [matches, setMatches] = useState<string[]>([]);
   const [showMatchModal, setShowMatchModal] = useState(false);
-  const [matchedItem, setMatchedItem] = useState<any>(null);
+  const [matchedItem, setMatchedItem] = useState<SwipeItem | null>(null);
   
   const { 
     isPremium, 
@@ -45,16 +53,16 @@ const Swap = () => {
     canSuperlike,
     superlikesRemaining,
     recordSwipe, 
-    useSuperlike,
+    useSuperlike: sendSuperlike,
     loading 
   } = useSubscription();
 
   useEffect(() => {
     fetchListings();
-  }, []);
+  }, [fetchListings]);
 
   // Transform listings to swipe items, excluding user's own listings
-  const swipeItems = useMemo(() => {
+  const swipeItems: SwipeItem[] = useMemo(() => {
     return listings
       .filter(listing => listing.user_id !== user?.id && listing.status === 'active')
       .map(listing => ({
@@ -118,18 +126,16 @@ const Swap = () => {
 
     const currentItem = swipeItems[currentIndex];
     if (currentItem) {
-      const success = await useSuperlike(currentItem.id);
+      const success = await sendSuperlike(currentItem.id);
       if (success) {
         toast.success("Superlike enviado!", {
           description: "As tuas chances de match aumentaram 3x!",
         });
         
-        // Superlike has higher match chance (70%)
-        if (Math.random() > 0.3) {
-          setMatches([...matches, currentItem.id]);
-          setMatchedItem(currentItem);
-          setShowMatchModal(true);
-        }
+        // Superlike is an automatic match
+        setMatches([...matches, currentItem.id]);
+        setMatchedItem(currentItem);
+        setShowMatchModal(true);
         
         setSwipedItems([...swipedItems, currentItem.id]);
         setCurrentIndex((prev) => Math.min(prev + 1, swipeItems.length));
