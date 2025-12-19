@@ -49,12 +49,12 @@ const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-transparent">
               <Search className="w-5 h-5" />
             </Button>
             {user && (
               <Link to="/chats">
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-transparent relative">
                   <MessageCircle className="w-5 h-5" />
                 </Button>
               </Link>
@@ -62,13 +62,13 @@ const Navbar = () => {
             {user ? (
               <>
                 <Link to="/wallet">
-                  <Button variant="ghost" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                  <Button variant="ghost" className="flex items-center gap-2 text-muted-foreground hover:text-foreground hover:bg-transparent">
                     <Wallet className="w-5 h-5" />
                     <span className="font-bold text-sm">{swapcoins}</span>
                   </Button>
                 </Link>
                 <Link to="/profile">
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-transparent">
                     <User className="w-5 h-5" />
                   </Button>
                 </Link>
