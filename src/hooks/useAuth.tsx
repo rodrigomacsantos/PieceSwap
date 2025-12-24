@@ -9,7 +9,7 @@ interface AuthContextType {
   swapcoins: number;
   refreshBalance: () => Promise<void>;
   signUp: (email: string, password: string, metadata?: { username?: string; full_name?: string }) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (identifier: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -84,10 +84,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error: error as Error | null };
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (identifier: string, password: string) => {
+    const { data: email, error: rpcError } = await supabase.rpc('get_email_by_username_or_email', { identifier });
+
+    if (rpcError) {
+      return { error: rpcError as Error | null };
+    }
+
+    if (!email) {
+      return { error: new Error("Utilizador não encontrado.") };
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     });
     return { error: error as Error | null };
   };
