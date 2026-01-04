@@ -19,9 +19,9 @@ const Wallet = () => {
     }
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('profiles')
-        .update({ swapcoins: swapcoins + product.swapcoins_amount })
+        .update({ swap_coins: swapcoins + product.swapcoins_amount })
         .eq('id', user.id);
 
       if (error) throw error;

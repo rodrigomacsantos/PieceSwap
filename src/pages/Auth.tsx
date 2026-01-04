@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
 
 const loginSchema = z.object({
-  identifier: z.string().min(3, "Username ou email inválido"),
+  email: z.string().email("Email inválido"),
   password: z.string().min(6, "Password deve ter pelo menos 6 caracteres"),
 });
 
@@ -27,11 +27,10 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    identifier: "",
+    email: "",
     password: "",
     username: "",
     fullName: "",
-    email: ""
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -57,7 +56,7 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const validation = loginSchema.safeParse(formData);
+        const validation = loginSchema.safeParse({ email: formData.email, password: formData.password });
         if (!validation.success) {
           const fieldErrors: Record<string, string> = {};
           validation.error.errors.forEach((err) => {
@@ -70,7 +69,7 @@ const Auth = () => {
           return;
         }
 
-        const { error } = await signIn(formData.identifier, formData.password);
+        const { error } = await signIn(formData.email, formData.password);
         if (error) {
           if (error.message.includes("Invalid login credentials")) {
             toast({
@@ -213,19 +212,20 @@ const Auth = () => {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="identifier">Username ou Email</Label>
+                <Label htmlFor="email">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    id="identifier"
-                    placeholder="username ou joao@exemplo.com"
-                    value={formData.identifier}
-                    onChange={(e) => handleChange("identifier", e.target.value)}
+                    id="email"
+                    type="email"
+                    placeholder="joao@exemplo.com"
+                    value={formData.email}
+                    onChange={(e) => handleChange("email", e.target.value)}
                     className="pl-10"
                   />
                 </div>
-                {errors.identifier && (
-                  <p className="text-xs text-destructive">{errors.identifier}</p>
+                {errors.email && (
+                  <p className="text-xs text-destructive">{errors.email}</p>
                 )}
               </div>
 
