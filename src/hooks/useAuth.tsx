@@ -9,7 +9,7 @@ interface AuthContextType {
   swapcoins: number;
   refreshBalance: () => Promise<void>;
   signUp: (email: string, password: string, metadata?: { username?: string; full_name?: string }) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (identifier: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -84,9 +84,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error: error as Error | null };
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (identifier: string, password: string) => {
+    let emailToUse = identifier;
+
+    // If identifier doesn't look like an email, try to get email by username
+    if (!identifier.includes('@')) {
+      try {
+        const { data, error: fnError } = await supabase.functions.invoke('get-email-by-username', {
+          body: { username: identifier },
+        });
+
+        if (fnError) {
+          console.error('Error calling get-email-by-username:', fnError);
+          return { error: new Error("Erro ao procurar utilizador.") };
+        }
+
+        if (!data?.email) {
+          return { error: new Error("Utilizador não encontrado.") };
+        }
+
+        emailToUse = data.email;
+      } catch (error) {
+        console.error('Error in username lookup:', error);
+        return { error: new Error("Erro ao procurar utilizador.") };
+      }
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: emailToUse,
       password,
     });
     return { error: error as Error | null };
