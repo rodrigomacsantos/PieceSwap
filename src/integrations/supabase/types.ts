@@ -498,6 +498,10 @@ export type Database = {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
       }
+      get_email_by_username_or_email: {
+        Args: { identifier: string }
+        Returns: string
+      }
       get_nearby_users: {
         Args: {
           max_results?: number

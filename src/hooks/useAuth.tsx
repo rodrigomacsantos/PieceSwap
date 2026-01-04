@@ -9,7 +9,7 @@ interface AuthContextType {
   swapcoins: number;
   refreshBalance: () => Promise<void>;
   signUp: (email: string, password: string, metadata?: { username?: string; full_name?: string }) => Promise<{ error: Error | null }>;
-  signIn: (identifier: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -25,12 +25,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('swapcoins')
+        .select('swap_coins')
         .eq('id', userId)
         .single();
 
       if (error) throw error;
-      setSwapcoins(data?.swapcoins || 0);
+      setSwapcoins(data?.swap_coins || 0);
     } catch (error) {
       console.error("Error fetching balance:", error);
     }
@@ -84,17 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error: error as Error | null };
   };
 
-  const signIn = async (identifier: string, password: string) => {
-    const { data: email, error: rpcError } = await supabase.rpc('get_email_by_username_or_email', { identifier });
-
-    if (rpcError) {
-      return { error: rpcError as Error | null };
-    }
-
-    if (!email) {
-      return { error: new Error("Utilizador não encontrado.") };
-    }
-
+  const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
