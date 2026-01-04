@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Share2, MessageCircle, ChevronLeft, ChevronRight, Star, MapPin, Shield, Coins, Package, Clock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { useToast } from "@/hooks/use-toast";
 import { useListings, Listing } from "@/hooks/useListings";
+import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 
@@ -35,8 +36,10 @@ interface ExtendedListing extends Listing {
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { fetchListing, listings } = useListings();
+  const { user } = useAuth();
   const [product, setProduct] = useState<ExtendedListing | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -72,10 +75,35 @@ const ProductDetail = () => {
   };
 
   const handleContact = () => {
-    toast({
-      title: "Funcionalidade em breve",
-      description: "O sistema de mensagens está em desenvolvimento.",
-    });
+    if (!user) {
+      toast({
+        title: "Inicia sessão",
+        description: "Precisas de iniciar sessão para contactar o vendedor.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    if (!product?.seller?.id) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível encontrar o vendedor.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (product.seller.id === user.id) {
+      toast({
+        title: "Este é o teu anúncio",
+        description: "Não podes contactar-te a ti próprio.",
+      });
+      return;
+    }
+
+    // Navigate to chats with seller and listing info
+    navigate(`/chats?seller=${product.seller.id}&listing=${product.id}`);
   };
 
   // Get related products (same category, excluding current)
